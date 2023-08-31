@@ -66,7 +66,7 @@ export default class ExplorerManager extends AbstractManager {
         }
 
         const result: { [k: string]: boolean } = {};
-        const promises = items.map(e => this.setTitle(e).then(r => (result[e.file.path] = r)));
+        const promises = items.map(e => this.setTitleAlt(e).then(r => (result[e.file.path] = r)));
 
         await Promise.all(promises);
         return result;
@@ -83,6 +83,25 @@ export default class ExplorerManager extends AbstractManager {
             return true;
         }
         return false;
+    }
+
+
+    private async setTitleAlt(item: TFileExplorerItem): Promise<boolean> {
+        const title = await (async () => this.resolver.resolve(item.file.path))().catch(() => null);
+        const explorerTitle: HTMLDivElement = item.selfEl.querySelector('.front-matter-extra-title')
+        if (this.isTitleEmpty(title) && explorerTitle != null) {
+            explorerTitle.remove();
+            return true;
+        }
+
+        if (explorerTitle == null) {
+            item.selfEl.createEl('div', {text: title, cls: 'front-matter-extra-title nav-file-title-content'});
+        }
+        else if (explorerTitle.innerText !== title) {
+            explorerTitle.innerText = title;
+        }
+
+        return true;
     }
 
     private isTitleEmpty = (title: string): boolean => title === null || title === "" || title === undefined;
